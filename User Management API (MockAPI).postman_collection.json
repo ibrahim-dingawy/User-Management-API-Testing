@@ -1,0 +1,747 @@
+{
+	"info": {
+		"_postman_id": "b662278b-933f-488b-8037-d0834bdaf85a",
+		"name": "User Management API (MockAPI)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48436931"
+	},
+	"item": [
+		{
+			"name": "Authentication (simulated)",
+			"item": [
+				{
+					"name": "Token Generating",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const rand = Math.random().toString(36).substring(2, 15);\r",
+									"const token = `sim-token-${Date.now()}-${rand}`;\r",
+									"pm.environment.set(\"token\", token);\r",
+									"pm.environment.set(\"auth_time\", new Date().toISOString());\r",
+									"console.log(\"Simulated token set:\", token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"  const res = pm.response.json();\r",
+									"  if (res.token) {\r",
+									"    pm.environment.set(\"token\", res.token);\r",
+									"  }\r",
+									"} catch (e) {\r",
+									"}\r",
+									"pm.test(\"Token exists in environment\", () => {\r",
+									"  pm.expect(pm.environment.get(\"token\")).to.not.be.undefined;\r",
+									"});\r",
+									"pm.test(\"Status is 200 or 201 or 204\", () => {\r",
+									"  pm.expect(pm.response.code).to.be.oneOf([200,201,204]); \r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://68f184e0b36f9750dee980f1.mockapi.io/users",
+							"protocol": "https",
+							"host": [
+								"68f184e0b36f9750dee980f1",
+								"mockapi",
+								"io"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users (CRUD)",
+			"item": [
+				{
+					"name": "PostUser",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const rand = Math.floor(Math.random()*100000);\r",
+									"pm.environment.set(\"name\", `User_${rand}`);\r",
+									"pm.environment.set(\"email\", `user${rand}@example.com`);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"pm.test(\"Status 201 or 200\", ()=> pm.expect(pm.response.code).to.be.oneOf([200,201]));\r",
+									"pm.test(\"Name matches\", ()=> pm.expect(res.name).to.eql(pm.environment.get(\"name\")));\r",
+									"pm.test(\"Email matches\", ()=> pm.expect(res.email).to.eql(pm.environment.get(\"email\")));\r",
+									"pm.environment.set(\"user_id\", res.id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{name}}\",\r\n  \"email\": \"{{email}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://68f184e0b36f9750dee980f1.mockapi.io/users",
+							"protocol": "https",
+							"host": [
+								"68f184e0b36f9750dee980f1",
+								"mockapi",
+								"io"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /users (CSV Driven)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status 201 Created\", function () {\r",
+									"    pm.expect(pm.response.code).to.eql(201);\r",
+									"});\r",
+									"pm.test(\"Name matches CSV data\", function () {\r",
+									"    pm.expect(res.name).to.eql(pm.iterationData.get(\"name\"));\r",
+									"});\r",
+									"pm.test(\"Email matches CSV data\", function () {\r",
+									"    pm.expect(res.email).to.eql(pm.iterationData.get(\"email\"));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{name}}\",\r\n  \"email\": \"{{email}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET User by ID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.environment.get(\"user_id\")) {\r",
+									"    pm.expect.fail(\"user_id not found in environment. Run POST /users first!\");\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status is 200\", () => {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has expected fields\", () => {\r",
+									"    pm.expect(res).to.include.all.keys(['id', 'name', 'email']);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User ID matches environment\", () => {\r",
+									"    pm.expect(String(res.id)).to.eql(String(pm.environment.get(\"user_id\")));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Name and Email are valid strings\", () => {\r",
+									"    pm.expect(res.name).to.be.a(\"string\").and.to.have.lengthOf.above(0);\r",
+									"    pm.expect(res.email).to.be.a(\"string\").and.to.include(\"@\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const rand = Math.floor(Math.random() * 100000);\r",
+									"pm.environment.set(\"updated_name\", `UpdatedUser_${rand}`);\r",
+									"pm.environment.set(\"updated_email\", `updated${rand}@example.com`);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status is 200\", () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Updated name matches\", () => {\r",
+									"  pm.expect(res.name).to.eql(pm.environment.get(\"updated_name\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Updated email matches\", () => {\r",
+									"  pm.expect(res.email).to.eql(pm.environment.get(\"updated_email\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User ID remains the same\", () => {\r",
+									"  pm.expect(String(res.id)).to.eql(String(pm.environment.get(\"user_id\")));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{updated_name}}\",\r\n  \"email\": \"{{updated_email}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "editname",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const rand = Math.floor(Math.random() * 100000);\r",
+									"pm.environment.set(\"patched_name\", `PatchedUser_${rand}`);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status is 200\", () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Patched name matches\", () => {\r",
+									"  pm.expect(res.name).to.eql(pm.environment.get(\"patched_name\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Email remains the same\", () => {\r",
+									"  pm.expect(res.email).to.eql(pm.environment.get(\"updated_email\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User ID unchanged\", () => {\r",
+									"  pm.expect(String(res.id)).to.eql(String(pm.environment.get(\"user_id\")));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{patched_name}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 or 204\", () => {\r",
+									"  pm.expect(pm.response.code).to.be.oneOf([200, 204]);\r",
+									"});\r",
+									"\r",
+									"try {\r",
+									"  const res = pm.response.json();\r",
+									"  pm.test(\"Response indicates deletion\", () => {\r",
+									"    pm.expect(res).to.have.any.keys(\"id\", \"name\", \"email\");\r",
+									"  });\r",
+									"} catch (err) {\r",
+									"  console.log(\"No JSON body returned after delete — that's fine.\");\r",
+									"}\r",
+									"\r",
+									"pm.environment.unset(\"user_id\");\r",
+									"pm.environment.unset(\"name\");\r",
+									"pm.environment.unset(\"email\");\r",
+									"pm.environment.unset(\"updated_name\");\r",
+									"pm.environment.unset(\"updated_email\");\r",
+									"pm.environment.unset(\"patched_name\");\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"packages": {},
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Negative Tests",
+			"item": [
+				{
+					"name": "POST /users - Missing fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is handled (201, 400 or 422)\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400, 422]);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response contains name field\", function () {\r",
+									"    const res = pm.response.json();\r",
+									"    pm.expect(res).to.have.property(\"name\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Email may be missing or null\", function () {\r",
+									"    const res = pm.response.json();\r",
+									"    pm.expect(res.email === undefined || res.email === null).to.be.true;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"User_MissingEmail\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /users/{id} - Invalid ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is handled correctly\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([404, 200]);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response should be empty or object\", function () {\r",
+									"    const resText = pm.response.text();\r",
+									"    try {\r",
+									"        const res = JSON.parse(resText);\r",
+									"        pm.expect(res).to.be.an(\"object\");\r",
+									"    } catch(e) {\r",
+									"        pm.expect(resText).to.be.oneOf([\"\", \"{}\", \"Not found\", '\"Not found\"']);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/999999",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"999999"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Duplicate Entry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status is handled correctly (201, 409, 400)\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 409, 400]);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response contains email field\", function () {\r",
+									"    pm.expect(res).to.have.property(\"email\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"If duplicate, API should not crash\", function () {\r",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"DuplicateUser\",\r\n  \"email\": \"duplicate@test.com\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pre-request dynamic data",
+			"item": [
+				{
+					"name": "Dynamic Data",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const rand = Math.floor(Math.random() * 10000);\r",
+									"\r",
+									"const name = `User_${rand}`;\r",
+									"const email = `user${rand}@test.com`;\r",
+									"\r",
+									"pm.environment.set(\"name\", name);\r",
+									"pm.environment.set(\"email\", email);\r",
+									"\r",
+									"console.log(\"Generated name:\", name);\r",
+									"console.log(\"Generated email:\", email);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status is 201 or 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Name matches generated value\", function () {\r",
+									"    pm.expect(res.name).to.eql(pm.environment.get(\"name\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Email matches generated value\", function () {\r",
+									"    pm.expect(res.email).to.eql(pm.environment.get(\"email\"));\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"user_id\", res.id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{name}}\",\r\n  \"email\": \"{{email}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
