@@ -65,7 +65,6 @@ newman run "User Management API (MockAPI).postman_collection.json" \
 👤 Author
 
 Ibrahim Ahmed 
-📧 kingdingawy@gmail.com
 💼 https://www.linkedin.com/in/ibrahim-dingawy
 
 
